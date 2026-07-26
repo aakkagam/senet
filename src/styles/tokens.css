@@ -1,0 +1,31 @@
+/* Design tokens — source of truth: DESIGN.md ("The Four Voices Rule" + Table).
+   All color values are PLACEHOLDERS to be resolved during UI work.
+   Constraint held even here: no pure #000 or #fff anywhere. */
+
+:root {
+  /* Palette (four voices + table neutral) */
+  --carved-wood: oklch(0.62 0.07 65); /* board box surface, warm mid timber */
+  --faience: oklch(0.68 0.11 195); /* the single Egyptian blue-green accent */
+  --ivory: oklch(0.94 0.02 90); /* light tokens, inlay lines, light text */
+  --ebony: oklch(0.24 0.02 55); /* dark tokens, text, carved shadows */
+  --table: oklch(0.9 0.02 80); /* quiet surface the box sits on */
+
+  /* Typography — families to be chosen during UI work (rare serif + humanist sans) */
+  --font-display: 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --font-body: 'Gill Sans', 'Segoe UI', system-ui, sans-serif;
+
+  /* Type scale, ratio 1.25 */
+  --text-sm: 0.8rem;
+  --text-base: 1rem;
+  --text-md: 1.25rem;
+  --text-lg: 1.563rem;
+  --text-xl: 1.953rem;
+  --text-2xl: 2.441rem;
+
+  --tracking-display: 0.04em;
+
+  /* Motion */
+  --duration-snap: 150ms;
+  --duration-ui: 200ms;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
