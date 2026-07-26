@@ -35,4 +35,4 @@
 - [x] 6.1 Replace the placeholder `App.svelte` with the game (store mounted, resume-from-save live); verify a restored awaiting-move phase shows its highlights and pending value without re-throwing
 - [x] 6.2 Update `index.html` prose: drop "coming soon", describe playing now (SEO head unchanged)
 - [x] 6.3 Verify full loop manually: two hotseat games end to end — swaps, rebirth, 26 gate, house-27 both options, exact exits, win, play again; check 360×640 and desktop; check grayscale distinguishability and reduced-motion mode
-- [ ] 6.4 `npm run check && npm test && npm run build` green; deploy via push and spot-check the live URL
+- [x] 6.4 `npm run check && npm test && npm run build` green; deploy via push and spot-check the live URL
