@@ -42,4 +42,4 @@
 
 - [x] 6.1 Copy align3's `.github/workflows/deploy.yml`; change build to `--base=/senet/` and insert `npm run check` before `npm test`
 - [x] 6.2 Verify locally that `npm run build -- --base=/senet/` prefixes asset URLs with `/senet/` in `dist/index.html`
-- [ ] 6.3 After first push to `main`: enable GitHub Pages with source "GitHub Actions" and verify the workflow deploys (manual step, note in PR/commit)
+- [x] 6.3 After first push to `main`: enable GitHub Pages with source "GitHub Actions" and verify the workflow deploys (manual step, note in PR/commit)
