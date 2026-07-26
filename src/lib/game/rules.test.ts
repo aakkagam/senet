@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyThrow, legalOrigins, legalTarget, move, newGame, setupSquares } from './rules';
+import { applyThrow, legalOrigins, legalTarget, move, newGame, refusalReason, setupSquares } from './rules';
 import { stateWith, t } from './test-helpers';
 import type { GameState } from './types';
 
@@ -301,5 +301,108 @@ describe('capture-by-swap onto the House of Second Life', () => {
       next.squares.filter((s) => s === p).length + next.borneOff[p];
     expect(count('light')).toBe(5);
     expect(count('dark')).toBe(5);
+  });
+});
+
+describe('refusalReason (UI read-only helper)', () => {
+  const awaiting = (value: 1 | 2 | 3 | 4 | 5, direction: 'forward' | 'backward' = 'forward') =>
+    ({ kind: 'awaiting-move', value, direction, extraThrow: false }) as const;
+
+  it('returns null for a legal move and outside awaiting-move', () => {
+    const pending = stateWith({ tokens: { 5: 'light' }, turn: 'light', phase: awaiting(3) });
+    expect(refusalReason(pending, 5)).toBeNull();
+    const idle = stateWith({ tokens: { 5: 'light' }, turn: 'light' });
+    expect(refusalReason(idle, 5)).toBeNull();
+  });
+
+  it('reports foreign or empty origins as not-yours', () => {
+    const state = stateWith({ tokens: { 5: 'light', 9: 'dark' }, turn: 'light', phase: awaiting(2) });
+    expect(refusalReason(state, 9)).toBe('not-yours');
+    expect(refusalReason(state, 12)).toBe('not-yours');
+  });
+
+  it("reports light's first-move restriction", () => {
+    const state = stateWith({
+      tokens: { 5: 'light', 9: 'light' },
+      turn: 'light',
+      phase: awaiting(2),
+      lightFirstMoveDone: false,
+    });
+    expect(refusalReason(state, 5)).toBe('first-move');
+    expect(refusalReason(state, 9)).toBeNull();
+  });
+
+  it('reports a token stuck on the House of Waters', () => {
+    const state = stateWith({ tokens: { 27: 'light', 5: 'light' }, turn: 'light', phase: awaiting(2) });
+    expect(refusalReason(state, 27)).toBe('waters');
+  });
+
+  it('reports landing on an own token', () => {
+    const state = stateWith({ tokens: { 5: 'light', 7: 'light' }, turn: 'light', phase: awaiting(2) });
+    expect(refusalReason(state, 5)).toBe('own-token');
+  });
+
+  it('reports a protected opponent pair, forward and backward', () => {
+    const fwd = stateWith({
+      tokens: { 12: 'light', 14: 'dark', 15: 'dark' },
+      turn: 'light',
+      phase: awaiting(2),
+    });
+    expect(refusalReason(fwd, 12)).toBe('protected');
+    const bwd = stateWith({
+      tokens: { 16: 'light', 14: 'dark', 15: 'dark' },
+      turn: 'light',
+      phase: awaiting(2, 'backward'),
+    });
+    expect(refusalReason(bwd, 16)).toBe('protected');
+  });
+
+  it('reports an opposing wall blocking passage', () => {
+    const state = stateWith({
+      tokens: { 12: 'light', 13: 'dark', 14: 'dark', 15: 'dark' },
+      turn: 'light',
+      phase: awaiting(4),
+    });
+    expect(refusalReason(state, 12)).toBe('wall');
+  });
+
+  it('reports the House of Beauty gate exactly when a forward move would pass 26', () => {
+    const state = stateWith({ tokens: { 24: 'light' }, turn: 'light', phase: awaiting(3) });
+    expect(refusalReason(state, 24)).toBe('beauty-gate');
+    // landing exactly on 26 is not gated
+    const exact = stateWith({ tokens: { 24: 'light' }, turn: 'light', phase: awaiting(2) });
+    expect(refusalReason(exact, 24)).toBeNull();
+    // moving from 26 itself is not gated
+    const from26 = stateWith({ tokens: { 26: 'light' }, turn: 'light', phase: awaiting(2) });
+    expect(refusalReason(from26, 26)).toBeNull();
+  });
+
+  it('reports wrong-value exits from the judges as exact-exit and any exit from 30 as legal', () => {
+    const three = stateWith({ tokens: { 28: 'light' }, turn: 'light', phase: awaiting(2) });
+    expect(refusalReason(three, 28)).toBe('exact-exit');
+    const two = stateWith({ tokens: { 29: 'light' }, turn: 'light', phase: awaiting(3) });
+    expect(refusalReason(two, 29)).toBe('exact-exit');
+    const twoOk = stateWith({ tokens: { 29: 'light' }, turn: 'light', phase: awaiting(2) });
+    expect(refusalReason(twoOk, 29)).toBeNull();
+    const horus = stateWith({ tokens: { 30: 'light' }, turn: 'light', phase: awaiting(5) });
+    expect(refusalReason(horus, 30)).toBeNull();
+  });
+
+  it('reports overshooting the board and backing off the start as off-board', () => {
+    const over = stateWith({ tokens: { 26: 'light' }, turn: 'light', phase: awaiting(5) });
+    expect(refusalReason(over, 26)).toBe('off-board');
+    const under = stateWith({ tokens: { 2: 'light' }, turn: 'light', phase: awaiting(3, 'backward') });
+    expect(refusalReason(under, 2)).toBe('off-board');
+  });
+
+  it('agrees with legalTarget across a mixed position', () => {
+    const state = stateWith({
+      tokens: { 5: 'light', 14: 'light', 24: 'light', 16: 'dark', 17: 'dark' },
+      turn: 'light',
+      phase: awaiting(3),
+    });
+    for (let s = 1; s <= 30; s++) {
+      expect(refusalReason(state, s) === null).toBe(legalTarget(state, s) !== null);
+    }
   });
 });

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { game } from '../store.svelte';
   import Stage from './Stage.svelte';
+  import HouseNote from './HouseNote.svelte';
   import Hud from './Hud.svelte';
   import WaterChoice from './WaterChoice.svelte';
   import WinBanner from './WinBanner.svelte';
@@ -13,6 +14,8 @@
     <Stage />
     {#if game.state.phase.kind === 'house-27-choice'}
       <WaterChoice />
+    {:else if game.houseNote}
+      <HouseNote />
     {/if}
   </div>
 

@@ -21,6 +21,11 @@ export const TRAY_Y = 60;
 /** Drop-capture radius around a destination center, in stage units. */
 export const SNAP = 10;
 
+/** Casting-stick sprite size: vertical rounded bars resting on the table. */
+export const STICK = { w: 2.2, h: 7 } as const;
+/** Center distance between neighbouring stick rests. */
+const STICK_GAP = 7;
+
 export interface Pos {
   x: number;
   y: number;
@@ -45,6 +50,12 @@ export function trayPos(player: Player, slot: number): Pos {
   return player === 'light'
     ? { x: BOARD.x + 11 + dx, y: TRAY_Y }
     : { x: BOARD.x + BOARD.cols * SQUARE - 11 - dx, y: TRAY_Y };
+}
+
+/** Rest positions of the four casting sticks: the open strip between the
+ *  trays (x ≈ 60–90 once both trays fill), centered on the tray row. */
+export function stickPos(i: number): Pos {
+  return { x: VIEW.w / 2 + (i - 1.5) * STICK_GAP, y: TRAY_Y };
 }
 
 /** Where a legal move lands visually: a square center, or the mover's next

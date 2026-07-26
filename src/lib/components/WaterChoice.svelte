@@ -11,8 +11,10 @@
 <div class="anchor" style="left: {left}%; top: {top}%">
   <div class="panel" role="group" aria-label="House of Waters choice">
     <p class="title">The Waters hold this token</p>
-    <button onclick={() => game.waterReturn()}>Return to Second Life</button>
-    <button onclick={() => game.waterThrow()} disabled={game.notice !== null}>
+    <button onclick={() => game.waterReturn()} disabled={game.revealing}>
+      Return to Second Life
+    </button>
+    <button onclick={() => game.waterThrow()} disabled={game.notice !== null || game.revealing}>
       Throw — only a 4 frees it
     </button>
   </div>

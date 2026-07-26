@@ -2,6 +2,7 @@
   import { game } from '../store.svelte';
   import { SQUARE, targetPos, VIEW } from '../geometry';
   import Board from './Board.svelte';
+  import Sticks from './Sticks.svelte';
   import Token from './Token.svelte';
 
   /** Active (dragged/hovered) token renders last = on top. */
@@ -36,6 +37,7 @@
   </defs>
 
   <Board />
+  <Sticks />
 
   {#if glow}
     {#if glow.off}

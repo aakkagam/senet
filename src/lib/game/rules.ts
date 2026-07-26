@@ -121,6 +121,58 @@ export function legalTarget(state: GameState, from: number): number | 'off' | nu
   return outcome.kind === 'bear-off' ? 'off' : outcome.to;
 }
 
+/** Why the token at `from` cannot make the pending move (read-only UI helper,
+ *  precedent: `legalTarget`). Reasons follow `moveOutcome`'s check order, so
+ *  the first rule that refuses is the one reported. */
+export type RefusalReason =
+  | 'not-yours'
+  | 'first-move'
+  | 'waters'
+  | 'own-token'
+  | 'protected'
+  | 'wall'
+  | 'beauty-gate'
+  | 'off-board'
+  | 'exact-exit';
+
+function landingRefusal(
+  squares: readonly (Player | null)[],
+  mover: Player,
+  to: number,
+): RefusalReason | null {
+  const occupant = squares[to];
+  if (!occupant) return null;
+  if (occupant === mover) return 'own-token';
+  return isProtectedAt(squares, to) ? 'protected' : null;
+}
+
+/** Read-only UI helper: why the pending throw refuses the token at `from`,
+ *  or null when the move is legal or no move is pending. */
+export function refusalReason(state: GameState, from: number): RefusalReason | null {
+  if (state.phase.kind !== 'awaiting-move') return null;
+  const { value, direction } = state.phase;
+  const { squares, turn } = state;
+  if (squares[from] !== turn) return 'not-yours';
+  if (!candidateOrigins(state).includes(from)) return 'first-move';
+  if (from === HOUSE_WATERS) return 'waters';
+
+  if (direction === 'forward') {
+    if (from === HOUSE_HORUS) return null;
+    if (from === HOUSE_TWO_JUDGES) return value === 2 ? null : 'exact-exit';
+    if (from === HOUSE_THREE_JUDGES) return value === 3 ? null : 'exact-exit';
+    const to = from + value;
+    if (to > LAST_SQUARE) return 'off-board';
+    if (from < HOUSE_BEAUTY && to > HOUSE_BEAUTY) return 'beauty-gate';
+    if (wallBlocksPassage(squares, turn, from, to)) return 'wall';
+    return landingRefusal(squares, turn, to);
+  }
+
+  const to = from - value;
+  if (to < FIRST_SQUARE) return 'off-board';
+  if (wallBlocksPassage(squares, turn, from, to)) return 'wall';
+  return landingRefusal(squares, turn, to);
+}
+
 /** Place a token on `target`, or on the first empty square scanning forward
  *  from it when occupied (the rebirth fallback). */
 function placeWithFallback(squares: (Player | null)[], target: number, token: Player): void {

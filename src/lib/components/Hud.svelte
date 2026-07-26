@@ -1,17 +1,22 @@
 <script lang="ts">
   import { game } from '../store.svelte';
 
-  const shownValue = $derived(game.pendingValue ?? game.lastThrow?.value ?? null);
+  /** The numeral is the fact — and it waits for the stick reveal. */
+  const shownValue = $derived(
+    game.revealing ? null : (game.pendingValue ?? game.lastThrow?.value ?? null),
+  );
 
   /** "Throw again" marker: pending on the current move, or granted and waiting.
    *  Never during a turn-passing notice — that throw earned nothing. */
   const throwAgain = $derived(
     !game.notice &&
+      !game.revealing &&
       (game.extraThrowPending ||
         (game.state.phase.kind === 'awaiting-throw' && (game.lastThrow?.throwAgain ?? false))),
   );
 
   const message = $derived.by(() => {
+    if (game.revealing) return '';
     if (game.notice) return game.notice.text;
     const st = game.state;
     if (st.phase.kind === 'house-27-choice') return 'A token is caught in the House of Waters.';
@@ -31,9 +36,13 @@
     return '';
   });
 
-  const canThrow = $derived(game.state.phase.kind === 'awaiting-throw' && !game.notice);
+  const canThrow = $derived(
+    game.state.phase.kind === 'awaiting-throw' && !game.notice && !game.revealing,
+  );
+  /* While the sticks tumble the button stays rendered (disabled) so the HUD
+     doesn't jump, whatever phase the committed throw landed in. */
   const showThrow = $derived(
-    game.state.phase.kind === 'awaiting-throw' || game.notice !== null,
+    game.state.phase.kind === 'awaiting-throw' || game.notice !== null || game.revealing,
   );
 
   /* Illegal grab: the turn indicator pulses once to say "their move". */
@@ -68,22 +77,8 @@
     <span class="who" aria-live="polite">{game.displayTurn === 'light' ? 'Light' : 'Dark'}</span>
   </div>
 
+  <!-- the stage sticks are the record of the throw; here only the fact remains -->
   <div class="result" aria-live="polite">
-    {#if game.lastFaces}
-      <svg viewBox="0 0 30 18" class="sticks" aria-hidden="true">
-        {#each game.lastFaces as up, i}
-          <rect
-            x={2 + i * 7}
-            y="2"
-            width="4"
-            height="14"
-            rx="2"
-            class="stick"
-            class:up
-          />
-        {/each}
-      </svg>
-    {/if}
     {#if shownValue !== null}
       <span class="numeral">{shownValue}</span>
       {#if throwAgain}
@@ -158,20 +153,6 @@
     align-items: center;
     gap: 8px;
     min-height: 44px;
-  }
-
-  .sticks {
-    width: 40px;
-    height: 26px;
-  }
-
-  .stick {
-    fill: var(--ebony);
-    stroke: var(--ebony);
-    stroke-width: 0.8;
-  }
-  .stick.up {
-    fill: var(--ivory);
   }
 
   .numeral {

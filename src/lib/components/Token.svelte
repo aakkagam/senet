@@ -52,7 +52,7 @@
 
   /** Illegal grab: the token shakes its head, never leaving its square. */
   function refuse() {
-    game.denyGrab();
+    game.denyGrab(typeof token.square === 'number' ? token.square : undefined);
     if (prefersReducedMotion()) {
       bodyEl.animate({ opacity: [1, 0.45, 1] }, { duration: 240, easing: 'ease-out' });
       return;
@@ -73,7 +73,8 @@
   function down(e: PointerEvent) {
     if (pointerId !== -1) return;
     if (!grabbable) {
-      if (playing && !game.notice) refuse();
+      // Mid-tumble taps change nothing at all — not even a head-shake.
+      if (playing && !game.notice && !game.revealing) refuse();
       return;
     }
     svg = (e.currentTarget as SVGGraphicsElement).ownerSVGElement;
