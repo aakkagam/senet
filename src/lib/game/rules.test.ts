@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyThrow, legalOrigins, move, newGame, setupSquares } from './rules';
+import { applyThrow, legalOrigins, legalTarget, move, newGame, setupSquares } from './rules';
 import { stateWith, t } from './test-helpers';
 import type { GameState } from './types';
 
@@ -200,5 +200,106 @@ describe('first-move rule', () => {
       { tokens: { 5: 'light', 9: 'dark', 20: 'dark' }, turn: 'light', lightFirstMoveDone: false },
     );
     expect(legalOrigins(state, 2, 'forward')).toContain(5);
+  });
+});
+
+describe('legalTarget (UI read-only helper)', () => {
+  const awaiting = (value: 1 | 2 | 3 | 4 | 5, direction: 'forward' | 'backward' = 'forward') =>
+    ({ kind: 'awaiting-move', value, direction, extraThrow: false }) as const;
+
+  it('returns the landing square for a plain forward move', () => {
+    const state = stateWith({ tokens: { 5: 'light' }, turn: 'light', phase: awaiting(3) });
+    expect(legalTarget(state, 5)).toBe(8);
+  });
+
+  it('returns the landing square for a backward move', () => {
+    const state = stateWith({ tokens: { 5: 'light' }, turn: 'light', phase: awaiting(3, 'backward') });
+    expect(legalTarget(state, 5)).toBe(2);
+  });
+
+  it("returns 'off' for an exact exit", () => {
+    const state = stateWith({ tokens: { 29: 'light' }, turn: 'light', phase: awaiting(2) });
+    expect(legalTarget(state, 29)).toBe('off');
+  });
+
+  it('returns null for an illegal or foreign origin', () => {
+    const state = stateWith({ tokens: { 5: 'light', 7: 'light', 9: 'dark' }, turn: 'light', phase: awaiting(2) });
+    expect(legalTarget(state, 5)).toBeNull(); // own token on 7
+    expect(legalTarget(state, 9)).toBeNull(); // opponent token
+    expect(legalTarget(state, 12)).toBeNull(); // empty square
+  });
+
+  it('returns null outside awaiting-move', () => {
+    const state = stateWith({ tokens: { 5: 'light' }, turn: 'light' });
+    expect(legalTarget(state, 5)).toBeNull();
+  });
+
+  it("honours light's first-move restriction to square 9", () => {
+    const state = stateWith({
+      tokens: { 5: 'light', 9: 'light' },
+      turn: 'light',
+      phase: awaiting(2),
+      lightFirstMoveDone: false,
+    });
+    expect(legalTarget(state, 5)).toBeNull();
+    expect(legalTarget(state, 9)).toBe(11);
+  });
+
+  it('agrees with legalOrigins across a mixed position', () => {
+    const state = stateWith({
+      tokens: { 5: 'light', 14: 'light', 25: 'light', 16: 'dark', 17: 'dark' },
+      turn: 'light',
+      phase: awaiting(2),
+    });
+    for (let s = 1; s <= 30; s++) {
+      const expected = legalOrigins(state, 2, 'forward').includes(s);
+      expect(legalTarget(state, s) !== null).toBe(expected);
+    }
+  });
+});
+
+describe('capture-by-swap onto the House of Second Life', () => {
+  const awaiting = (value: 1 | 2 | 3 | 4 | 5, direction: 'forward' | 'backward' = 'forward') =>
+    ({ kind: 'awaiting-move', value, direction, extraThrow: false }) as const;
+
+  it('sends the victim to the origin, reborns the mover, and empties 15', () => {
+    const state = stateWith({
+      tokens: { 12: 'light', 15: 'dark' },
+      turn: 'light',
+      phase: awaiting(3),
+    });
+    const next = move(state, 12)!;
+    expect(next.squares[15]).toBeNull();
+    expect(next.squares[12]).toBe('dark');
+    expect(next.squares[1]).toBe('light');
+    expect(next.squares.filter((p) => p === 'dark')).toHaveLength(1);
+    expect(next.squares.filter((p) => p === 'light')).toHaveLength(1);
+  });
+
+  it('handles a backward landing on an occupied 15 the same way', () => {
+    const state = stateWith({
+      tokens: { 17: 'light', 15: 'dark' },
+      turn: 'light',
+      phase: awaiting(2, 'backward'),
+    });
+    const next = move(state, 17)!;
+    expect(next.squares[15]).toBeNull();
+    expect(next.squares[17]).toBe('dark');
+    expect(next.squares[1]).toBe('light');
+    expect(next.squares.filter((p) => p === 'dark')).toHaveLength(1);
+  });
+
+  it('never changes the total token count across any legal transition', () => {
+    const state = stateWith({
+      tokens: { 12: 'light', 14: 'light', 15: 'dark', 18: 'dark', 3: 'dark' },
+      turn: 'light',
+      phase: awaiting(3),
+      borneOff: { light: 3, dark: 2 },
+    });
+    const next = move(state, 12)!;
+    const count = (p: 'light' | 'dark') =>
+      next.squares.filter((s) => s === p).length + next.borneOff[p];
+    expect(count('light')).toBe(5);
+    expect(count('dark')).toBe(5);
   });
 });

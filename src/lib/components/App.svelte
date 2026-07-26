@@ -1,31 +1,52 @@
 <script lang="ts">
-  // Placeholder shell: the playable board arrives in the next change.
+  import { game } from '../store.svelte';
+  import Stage from './Stage.svelte';
+  import Hud from './Hud.svelte';
+  import WaterChoice from './WaterChoice.svelte';
+  import WinBanner from './WinBanner.svelte';
 </script>
 
 <main>
-  <h1>Senet</h1>
-  <p>The ancient Egyptian race game — coming soon.</p>
+  <h1 class="mark">Senet</h1>
+
+  <div class="stage-wrap">
+    <Stage />
+    {#if game.state.phase.kind === 'house-27-choice'}
+      <WaterChoice />
+    {/if}
+  </div>
+
+  <Hud />
+
+  {#if game.state.phase.kind === 'game-over'}
+    <WinBanner />
+  {/if}
 </main>
 
 <style>
   main {
-    max-width: 38rem;
-    margin: 0 auto;
-    padding: 4rem 1.25rem 2rem;
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 14px 8px 6px;
   }
 
-  h1 {
-    margin: 0 0 0.5rem;
+  .mark {
+    margin: 0;
     font-family: var(--font-display);
     font-weight: 400;
-    font-size: var(--text-2xl);
+    font-size: var(--text-md);
     letter-spacing: var(--tracking-display);
     color: var(--ebony);
   }
 
-  p {
-    margin: 0;
-    color: var(--ebony);
+  /* The box keeps its proportions like a physical object: the wrapper locks
+     the stage aspect so overlays anchored by percentage line up with squares,
+     and narrow viewports letterbox instead of reflowing. */
+  .stage-wrap {
+    position: relative;
+    width: min(100%, 960px);
+    aspect-ratio: 150 / 68;
   }
 </style>

@@ -110,6 +110,17 @@ export function legalOrigins(state: GameState, value: number, direction: Directi
   return candidateOrigins(state).filter((from) => moveOutcome(state, from, value, direction) !== null);
 }
 
+/** Read-only UI helper: where the pending throw would take the token at
+ *  `from` — a destination square, 'off' for a bear-off, or null when the
+ *  move is illegal (or no move is pending). */
+export function legalTarget(state: GameState, from: number): number | 'off' | null {
+  if (state.phase.kind !== 'awaiting-move') return null;
+  if (!candidateOrigins(state).includes(from)) return null;
+  const outcome = moveOutcome(state, from, state.phase.value, state.phase.direction);
+  if (!outcome) return null;
+  return outcome.kind === 'bear-off' ? 'off' : outcome.to;
+}
+
 /** Place a token on `target`, or on the first empty square scanning forward
  *  from it when occupied (the rebirth fallback). */
 function placeWithFallback(squares: (Player | null)[], target: number, token: Player): void {
@@ -177,6 +188,8 @@ export function move(state: GameState, from: number): GameState | null {
     if (outcome.to === HOUSE_REBIRTH) {
       // House of Second Life: the arriving token is reborn on square 1
       // (forward-scan fallback when occupied). Triggers on backward landings too.
+      // A swapped-out victim has already taken the origin, so 15 ends empty.
+      squares[outcome.to] = null;
       placeWithFallback(squares, FIRST_SQUARE, mover);
     } else {
       squares[outcome.to] = mover;
