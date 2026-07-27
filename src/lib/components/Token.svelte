@@ -160,6 +160,10 @@
   <g class="body" bind:this={bodyEl}>
     <TokenGlyph player={token.player} rim />
   </g>
+  <!-- Drawn rather than outlined: an outline here would be scaled by the
+       board's viewBox transform. Styled in base.css alongside the rule that
+       suppresses the outline it replaces. -->
+  <circle class="focus-ring" r="7.4" />
   <!-- generous invisible touch target (≥44px even at 360px-wide viewports) -->
   <circle r="10" fill="transparent" />
 </g>

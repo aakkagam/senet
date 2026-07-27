@@ -120,11 +120,15 @@
     }
   }
 
-  /* Short viewports of either orientation: the wordmark is the first thing to
-     go, since index.html already names the game above the board. */
+  /* Short viewports of either orientation: the wordmark shrinks rather than
+     going away. Dropping it here was justified by index.html naming the game
+     above the board — but that prose only sits above the board in the upright
+     layout. The rotation a few rules up turns the first screen a quarter turn
+     and pushes the heading below the fold with it, so on a phone the game was
+     left with no title anywhere on screen. */
   @media (orientation: portrait) and (max-width: 430px), (max-height: 430px) {
     .mark {
-      display: none;
+      font-size: var(--text-md);
     }
   }
 </style>

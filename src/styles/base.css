@@ -51,6 +51,32 @@ button {
   outline-offset: 2px;
 }
 
+/* Inside the board, an outline is painted in SVG user units and so is scaled
+   by the viewBox transform along with the artwork. The board is 150 units wide
+   and renders around 570px on a phone, so the 2px above arrives as roughly 8px
+   and Chrome's own `outline: auto` ring as roughly 19px — a slab around the
+   token rather than a ring. Board focus targets therefore suppress the outline
+   and draw a .focus-ring instead: its radius scales with the board, as it
+   should, while non-scaling-stroke pins the stroke to the width it claims. */
+svg :focus,
+svg :focus-visible {
+  outline: none;
+}
+
+.focus-ring {
+  fill: none;
+  stroke: none;
+}
+
+/* Two shapes because the ring sits inside the focus target in some components
+   and beside it in others. */
+:focus-visible > .focus-ring,
+:has(> :focus-visible) > .focus-ring {
+  stroke: var(--faience-deep);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
 /* Announced, never drawn: one live region speaks the turn, the throw and any
    notice as a single sentence, so the HUD's three visual pieces stay silent. */
 .sr-only {
