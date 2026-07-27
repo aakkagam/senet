@@ -1,5 +1,10 @@
 <script lang="ts">
   import { BOARD, FRAME, SQUARE, squarePos, trayPos } from '../geometry';
+  import { HOUSE_LORE, LORE_HOUSES } from '../houseLore';
+  import { game } from '../store.svelte';
+
+  /** A touch tap has no hover; hold the tooltip long enough to be read. */
+  const TOUCH_LINGER_MS = 3500;
 
   const bx = BOARD.x;
   const by = BOARD.y;
@@ -70,6 +75,30 @@
     </g>
   </g>
 
+  <!-- hover/focus targets over the marked houses; lore renders in HouseLore -->
+  <g class="hotspots">
+    {#each LORE_HOUSES as house}
+      {@const p = squarePos(house)}
+      <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
+      <rect
+        class="hotspot"
+        x={p.x - SQUARE / 2}
+        y={p.y - SQUARE / 2}
+        width={SQUARE}
+        height={SQUARE}
+        rx="1"
+        role="img"
+        tabindex="0"
+        aria-label="{HOUSE_LORE[house].name}. {HOUSE_LORE[house].text}"
+        onpointerenter={() => game.showHouseInfo(house)}
+        onpointerleave={(e) =>
+          game.hideHouseInfo(house, e.pointerType === 'touch' ? TOUCH_LINGER_MS : 0)}
+        onfocus={() => game.showHouseInfo(house)}
+        onblur={() => game.hideHouseInfo(house)}
+      />
+    {/each}
+  </g>
+
   <!-- the reverse-S turns, hinted where the path bends down -->
   <g class="chevrons">
     <path d="M -1.6 -0.9 L 0 0.9 L 1.6 -0.9" transform="translate({turn1.x} {turn1.y})" />
@@ -111,6 +140,18 @@
   .marks .dot {
     fill: var(--ivory);
     stroke: none;
+  }
+
+  .hotspot {
+    fill: transparent;
+    stroke: none;
+    cursor: help;
+    outline: none;
+  }
+
+  .hotspot:focus-visible {
+    stroke: var(--faience);
+    stroke-width: 0.7;
   }
 
   .chevrons path {

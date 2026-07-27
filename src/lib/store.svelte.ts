@@ -76,6 +76,8 @@ class Game {
   revealing = $state(false);
   /** Transient teaching note anchored at a special house. */
   houseNote = $state<HouseNote | null>(null);
+  /** House whose lore tooltip is open (pointer or focus on its carved mark). */
+  infoHouse = $state<number | null>(null);
 
   /** Notice earned by a throw, held back until its reveal completes. */
   private pendingNotice = $state<Notice | null>(null);
@@ -83,6 +85,7 @@ class Game {
   private noticeTimer: ReturnType<typeof setTimeout> | undefined;
   private revealTimer: ReturnType<typeof setTimeout> | undefined;
   private houseNoteTimer: ReturnType<typeof setTimeout> | undefined;
+  private infoHouseTimer: ReturnType<typeof setTimeout> | undefined;
   private noteId = 0;
   /** Houses whose landing note already fired this game (notes teach once). */
   private seenHouses = new Set<number>();
@@ -177,6 +180,25 @@ class Game {
     if (this.pendingNotice) {
       this.setNotice(this.pendingNotice.text, this.pendingNotice.player);
       this.pendingNotice = null;
+    }
+  }
+
+  /** Open a house's lore tooltip. Never fights an active drag. */
+  showHouseInfo(house: number): void {
+    if (this.dragging !== null) return;
+    clearTimeout(this.infoHouseTimer);
+    this.infoHouse = house;
+  }
+
+  /** Close a house's lore tooltip; a touch tap lingers so the text is readable. */
+  hideHouseInfo(house: number, afterMs = 0): void {
+    clearTimeout(this.infoHouseTimer);
+    if (afterMs > 0) {
+      this.infoHouseTimer = setTimeout(() => {
+        if (this.infoHouse === house) this.infoHouse = null;
+      }, afterMs);
+    } else if (this.infoHouse === house) {
+      this.infoHouse = null;
     }
   }
 
@@ -292,6 +314,7 @@ class Game {
     clearTimeout(this.noticeTimer);
     clearTimeout(this.revealTimer);
     clearTimeout(this.houseNoteTimer);
+    clearTimeout(this.infoHouseTimer);
     this.state = newGame();
     this.tokens = initialTokens(this.state);
     this.lastFaces = null;
@@ -301,6 +324,7 @@ class Game {
     this.pendingNotice = null;
     this.revealing = false;
     this.houseNote = null;
+    this.infoHouse = null;
     this.seenHouses.clear();
     save(localStorage, this.state);
   }

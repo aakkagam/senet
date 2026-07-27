@@ -3,21 +3,22 @@
   import { game } from '../store.svelte';
   import { SQUARE, squarePos, VIEW } from '../geometry';
   import { prefersReducedMotion } from '../motion';
+  import { HOUSE_LORE } from '../houseLore';
 
-  /* Anchored above the note's house, WaterChoice's percent pattern; the store
-     owns the ~3 s lifetime, so this component only renders and announces. */
-  const note = $derived(game.houseNote);
+  /* Anchored above the hovered house, HouseNote's percent pattern. The tail
+     stays on the square; near the right edge only the panel slides left. */
+  const house = $derived(game.infoHouse);
+  const lore = $derived(house === null ? null : HOUSE_LORE[house]);
   const anchor = $derived.by(() => {
-    if (!note) return null;
-    const p = squarePos(note.house);
+    if (house === null) return null;
+    const p = squarePos(house);
     return {
       left: (p.x / VIEW.w) * 100,
       top: ((p.y - SQUARE / 2 - 1) / VIEW.h) * 100,
     };
   });
 
-  /** Panel shift in percent of its own width, capped short of the tail
-   *  (HouseLore's edge treatment; the tail stays on the square). */
+  /** Panel shift in percent of its own width, capped short of the tail. */
   const shift = $derived.by(() => {
     if (!anchor || anchor.left <= 72) return 0;
     return Math.max(-42, -(anchor.left - 72) * 2);
@@ -26,15 +27,20 @@
   const fadeMs = $derived(prefersReducedMotion() ? 0 : 150);
 </script>
 
-{#if note && anchor}
-  {#key note.id}
+{#if lore && anchor}
+  {#key house}
+    <!-- the hotspot's aria-label already speaks this text -->
     <div
       class="anchor"
       style="left: {anchor.left}%; top: {anchor.top}%"
       transition:fade={{ duration: fadeMs }}
+      aria-hidden="true"
     >
-      <p class="panel" style="transform: translateX({shift}%)" aria-live="polite">{note.text}</p>
-      <div class="tail" aria-hidden="true"></div>
+      <p class="panel" style="transform: translateX({shift}%)">
+        <strong class="name">{lore.name}</strong>
+        {lore.text}
+      </p>
+      <div class="tail"></div>
     </div>
   {/key}
 {/if}
@@ -47,7 +53,7 @@
     flex-direction: column;
     align-items: center;
     z-index: 2;
-    /* teaching never blocks play */
+    /* lore never blocks play */
     pointer-events: none;
   }
 
@@ -56,15 +62,23 @@
     /* shrink-to-fit would collapse against the stage edge for right-side
        houses; take natural width and let the edge shift handle overflow */
     width: max-content;
-    max-width: 30ch;
-    padding: 6px 10px;
+    max-width: 34ch;
+    padding: 7px 11px;
     font-size: var(--text-sm);
-    text-align: center;
-    text-wrap: balance;
+    text-align: left;
+    text-wrap: pretty;
     background: var(--ivory);
     border: 1px solid var(--ebony);
     border-radius: 10px;
     box-shadow: 0 4px 14px oklch(0.2 0.02 60 / 0.22);
+  }
+
+  .name {
+    display: block;
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: var(--tracking-display);
+    margin-bottom: 2px;
   }
 
   .tail {
