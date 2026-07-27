@@ -117,5 +117,56 @@
     </section>
 
     <script type="module" src="/src/main.ts"></script>
+
+    <!--
+      Registers the site-wide service worker that makes Senet playable offline.
+      The worker is /sw.js, served from the origin root by the aakkagam.github.io
+      repo rather than this one: games.aakkagam.com is assembled from several
+      independent GitHub Pages sites sharing a single origin, and one worker at
+      the root covers all of them. A worker's scope is bounded by its own script
+      path and not by the page that registers it, so this page at /senet/ may
+      legitimately claim scope /.
+
+      Registering it here, and not only on the landing page, is what covers a
+      visitor who arrives on this page straight from a search result.
+
+      Under `npm run dev` there is no /sw.js, so this rejects harmlessly and dev
+      never runs a worker. Keep in step with the copy in the landing repo.
+    -->
+    <script>
+      (function () {
+        if (!('serviceWorker' in navigator)) return;
+        window.addEventListener('load', function () {
+          navigator.serviceWorker
+            .register('/sw.js', { scope: '/', updateViaCache: 'none' })
+            .then(function (registration) {
+              registration.update();
+              return navigator.serviceWorker.ready;
+            })
+            .then(function () {
+              // Nothing this page loaded went through the worker, because the
+              // worker did not exist when the page was fetched. Hand it the list
+              // so this visit is enough to make the page work offline, rather
+              // than the next one.
+              var warm = function () {
+                if (!navigator.serviceWorker.controller) return;
+                navigator.serviceWorker.controller.postMessage({
+                  type: 'WARM',
+                  page: location.href,
+                  urls: performance.getEntriesByType('resource').map(function (entry) {
+                    return entry.name;
+                  })
+                });
+              };
+              if (navigator.serviceWorker.controller) warm();
+              else navigator.serviceWorker.addEventListener('controllerchange', warm, { once: true });
+              // Again once late webfont subsets have settled. Already-cached
+              // URLs are skipped, so the second pass costs almost nothing.
+              window.setTimeout(warm, 2000);
+            })
+            .catch(function () { /* offline support is optional; never block the page */ });
+        });
+      })();
+    </script>
   </body>
 </html>
