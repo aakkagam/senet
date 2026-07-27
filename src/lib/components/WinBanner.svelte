@@ -2,47 +2,49 @@
   import { fade } from 'svelte/transition';
   import { game } from '../store.svelte';
   import { prefersReducedMotion } from '../motion';
+  import TokenMarker from './TokenMarker.svelte';
 
   const winner = $derived(
     game.state.phase.kind === 'game-over' ? game.state.phase.winner : null,
   );
   const delay = prefersReducedMotion() ? 0 : 450;
   const dur = prefersReducedMotion() ? 0 : 220;
+
+  /* The game is over and there is exactly one thing left to do, so hand the
+     keyboard straight to it rather than leaving focus on a board nobody can
+     play any more. Waits out the entrance so the move doesn't fight the fade. */
+  let playAgain: HTMLButtonElement | null = $state(null);
+  $effect(() => {
+    if (!playAgain) return;
+    const t = setTimeout(() => playAgain?.focus(), delay + dur);
+    return () => clearTimeout(t);
+  });
 </script>
 
 <div class="veil" in:fade={{ duration: dur, delay }} out:fade={{ duration: dur }}>
-  <div class="panel">
-    <p class="win-title">{winner === 'light' ? 'Light' : 'Dark'} passes beyond</p>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="win-title">
+    <p class="win-title" id="win-title">{winner === 'light' ? 'Light' : 'Dark'} passes beyond</p>
     <p class="detail">
-      <svg viewBox="-6 -6.5 12 13" class="glyph" aria-hidden="true">
-        {#if winner === 'light'}
-          <path
-            d="M -3.6 -4.8 L 3.6 -4.8 C 3.6 -1.6 1.1 -1 1.1 0 C 1.1 1 3.6 1.6 3.6 4.8 L -3.6 4.8 C -3.6 1.6 -1.1 1 -1.1 0 C -1.1 -1 -3.6 -1.6 -3.6 -4.8 Z"
-            fill="var(--ivory)"
-            stroke="var(--ebony)"
-            stroke-width="0.4"
-          />
-        {:else}
-          <path d="M 0 -5.2 L 3.9 3.4 Q 3.9 5 0 5 Q -3.9 5 -3.9 3.4 Z" fill="var(--ebony)" />
-        {/if}
-      </svg>
+      {#if winner}<TokenMarker player={winner} />{/if}
       All five tokens borne off the board
     </p>
-    <button class="again" onclick={() => game.newGame()}>Play again</button>
+    <button class="again" bind:this={playAgain} onclick={() => game.newGame()}>Play again</button>
   </div>
 </div>
 
 <style>
+  /* The panel needs ground. Floating it straight onto the board read as a
+     sticker; a warm scrim settles the finished position back and makes the one
+     remaining action unmistakable. */
   .veil {
     position: fixed;
     inset: 0;
     display: grid;
     place-items: center;
-    pointer-events: none;
+    background: oklch(0.32 0.03 60 / 0.42);
   }
 
   .panel {
-    pointer-events: auto;
     background: var(--ivory);
     border: 1px solid var(--ebony);
     border-radius: 14px;
@@ -78,11 +80,6 @@
     font-size: var(--text-sm);
   }
 
-  .glyph {
-    width: 18px;
-    height: 20px;
-  }
-
   .again {
     font-weight: 700;
     background: transparent;
@@ -91,10 +88,16 @@
     padding: 10px 30px;
     min-height: 44px;
     cursor: pointer;
+    transition: background-color var(--duration-ui) var(--ease-out-expo);
   }
+  /* Ebony on the glaze, not ivory: ivory on faience is 2.3:1, ebony is 6.0:1. */
   .again:hover {
     background: var(--faience);
-    color: var(--ivory);
+    color: var(--ebony);
+  }
+  .again:active {
+    background: var(--faience);
+    border-color: var(--faience-deep);
   }
 
   @media (prefers-reduced-motion: reduce) {

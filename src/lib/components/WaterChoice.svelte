@@ -15,7 +15,7 @@
       Return to Second Life
     </button>
     <button onclick={() => game.waterThrow()} disabled={game.notice !== null || game.revealing}>
-      Throw — only a 4 frees it
+      Throw: only a 4 frees it
     </button>
   </div>
   <div class="tail" aria-hidden="true"></div>
@@ -70,11 +70,16 @@
     border-radius: 999px;
     cursor: pointer;
     white-space: nowrap;
-    transition: background-color var(--duration-ui);
+    transition: background-color var(--duration-ui) var(--ease-out-expo);
   }
+  /* Ebony on the glaze, not ivory: ivory on faience is 2.3:1, ebony is 6.0:1. */
   button:hover:enabled {
     background: var(--faience);
-    color: var(--ivory);
+    color: var(--ebony);
+  }
+  button:active:enabled {
+    background: var(--faience);
+    border-color: var(--faience-deep);
   }
   button:disabled {
     opacity: 0.45;

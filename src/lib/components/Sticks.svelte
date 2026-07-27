@@ -6,8 +6,12 @@
   /* The sticks are theatre; the HUD numeral is the fact (and the accessible
      record), so the whole group stays aria-hidden. */
 
-  const anims: SVGGElement[] = [];
-  const lightFaces: SVGGElement[] = [];
+  /* One ref for the whole group, not `bind:this` into an array per stick: the
+     array form is what Svelte warns about (it can't track element writes into a
+     plain array), and it fails silently — a missed binding skips the tumble and
+     leaves the reveal gate to the fail-safe timer. The effect runs after the
+     DOM flush, so the children are always there to be read. */
+  let root = $state<SVGGElement | null>(null);
   let running: Animation[] = [];
 
   /** Offsets where scaleX pinches to nothing — the face swaps at each pinch. */
@@ -49,7 +53,9 @@
      `revealing` is never set, so the sticks simply appear settled. */
   $effect(() => {
     const faces = game.lastFaces;
-    if (!faces || !game.revealing) return;
+    if (!faces || !game.revealing || !root) return;
+    const anims = root.querySelectorAll<SVGGElement>('.anim');
+    const lightFaces = root.querySelectorAll<SVGGElement>('.light-face');
     cancelAll();
     let lastTumble: Animation | null = null;
     faces.forEach((light, i) => {
@@ -71,11 +77,11 @@
 </script>
 
 {#if game.lastFaces}
-  <g class="sticks" aria-hidden="true">
+  <g class="sticks" aria-hidden="true" bind:this={root}>
     {#each game.lastFaces as light, i}
       {@const p = stickPos(i)}
       <g transform="translate({p.x} {p.y})">
-        <g class="anim" bind:this={anims[i]}>
+        <g class="anim">
           <rect
             class="dark-face"
             x={-STICK.w / 2}
@@ -85,7 +91,7 @@
             rx={STICK.w / 2}
           />
           <!-- light face: ivory AND a carved groove, so faces are never color-alone -->
-          <g class="light-face" class:up={light} bind:this={lightFaces[i]}>
+          <g class="light-face" class:up={light}>
             <rect
               x={-STICK.w / 2}
               y={-STICK.h / 2}

@@ -26,6 +26,14 @@ export const STICK = { w: 2.2, h: 7 } as const;
 /** Center distance between neighbouring stick rests. */
 const STICK_GAP = 7;
 
+/** Borne-off tray slots: first slot's inset from the box frame, and the pitch
+ *  between slots. Both trays grow inward, so the pair must stop clear of the
+ *  stick rests that own the centre strip (see the geometry test). */
+const TRAY_INSET = 7;
+const TRAY_STEP = 11;
+/** Visual radius of a tray slot, and of a stick at rest — the clearance budget. */
+export const TRAY_SLOT_R = 4.4;
+
 export interface Pos {
   x: number;
   y: number;
@@ -46,10 +54,10 @@ export function squarePos(square: number): Pos {
 /** Borne-off tray slot centers: light fills left-to-right from the left edge,
  *  dark right-to-left from the right edge, below the box. */
 export function trayPos(player: Player, slot: number): Pos {
-  const dx = slot * 11;
+  const dx = slot * TRAY_STEP;
   return player === 'light'
-    ? { x: BOARD.x + 11 + dx, y: TRAY_Y }
-    : { x: BOARD.x + BOARD.cols * SQUARE - 11 - dx, y: TRAY_Y };
+    ? { x: BOARD.x + TRAY_INSET + dx, y: TRAY_Y }
+    : { x: BOARD.x + BOARD.cols * SQUARE - TRAY_INSET - dx, y: TRAY_Y };
 }
 
 /** Rest positions of the four casting sticks: the open strip between the

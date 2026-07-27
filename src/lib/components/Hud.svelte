@@ -1,5 +1,6 @@
 <script lang="ts">
   import { game } from '../store.svelte';
+  import TokenMarker from './TokenMarker.svelte';
 
   /** The numeral is the fact — and it waits for the stick reveal. */
   const shownValue = $derived(
@@ -19,11 +20,13 @@
     if (game.revealing) return '';
     if (game.notice) return game.notice.text;
     const st = game.state;
-    if (st.phase.kind === 'house-27-choice') return 'A token is caught in the House of Waters.';
+    // The Waters panel is anchored on the square and says this itself; repeating
+    // it down here was the same sentence twice on one screen.
+    if (st.phase.kind === 'house-27-choice') return '';
     if (game.backwardTurn) {
       return game.lastThrow?.throwAgain
-        ? 'No forward moves — move a token backward. The extra throw is forfeited.'
-        : 'No forward moves — move a token backward.';
+        ? 'No forward moves. Move a token backward; the extra throw is forfeited.'
+        : 'No forward moves. Move a token backward.';
     }
     if (
       st.phase.kind === 'awaiting-move' &&
@@ -36,11 +39,29 @@
     return '';
   });
 
+  const who = $derived(game.displayTurn === 'light' ? 'Light' : 'Dark');
+
+  /** The whole HUD as one sentence. The turn glyph, the numeral and the notice
+   *  are three views of one state; announcing them from three live regions
+   *  reads it out three times, so they stay silent and this speaks instead. */
+  const spoken = $derived.by(() => {
+    const parts = [`${who} to play`];
+    if (shownValue !== null) parts.push(`threw a ${shownValue}`);
+    if (throwAgain) parts.push('throw again');
+    if (message) parts.push(message);
+    // Only the sighted player gets this from the panel pointing at square 27.
+    if (game.state.phase.kind === 'house-27-choice') {
+      parts.push('A token is caught in the House of Waters');
+    }
+    return parts.join('. ') + '.';
+  });
+
   const canThrow = $derived(
     game.state.phase.kind === 'awaiting-throw' && !game.notice && !game.revealing,
   );
-  /* While the sticks tumble the button stays rendered (disabled) so the HUD
-     doesn't jump, whatever phase the committed throw landed in. */
+  /* The throw is committed before it is revealed, so the button stays rendered
+     (disabled) for the length of the tumble rather than blinking out the
+     instant the phase changes under it. */
   const showThrow = $derived(
     game.state.phase.kind === 'awaiting-throw' || game.notice !== null || game.revealing,
   );
@@ -60,63 +81,62 @@
   });
 </script>
 
+<!-- Three fixed slots. The throw button comes and goes twice a turn, and the
+     numeral appears and vanishes; on a centred flex row that shunted the whole
+     HUD sideways by 66px each time. Anchoring the outer slots to the rail's
+     edges lets the middle change size without moving anything. -->
 <div class="hud">
+  <p class="sr-only" aria-live="polite">{spoken}</p>
+
   <div class="turn" bind:this={indicator}>
-    <svg viewBox="-6 -6.5 12 13" class="glyph" aria-hidden="true">
-      {#if game.displayTurn === 'light'}
-        <path
-          d="M -3.6 -4.8 L 3.6 -4.8 C 3.6 -1.6 1.1 -1 1.1 0 C 1.1 1 3.6 1.6 3.6 4.8 L -3.6 4.8 C -3.6 1.6 -1.1 1 -1.1 0 C -1.1 -1 -3.6 -1.6 -3.6 -4.8 Z"
-          fill="var(--ivory)"
-          stroke="var(--ebony)"
-          stroke-width="0.4"
-        />
-      {:else}
-        <path d="M 0 -5.2 L 3.9 3.4 Q 3.9 5 0 5 Q -3.9 5 -3.9 3.4 Z" fill="var(--ebony)" />
-      {/if}
-    </svg>
-    <span class="who" aria-live="polite">{game.displayTurn === 'light' ? 'Light' : 'Dark'}</span>
+    <span class="glyph"><TokenMarker player={game.displayTurn} /></span>
+    <span class="who">{who}</span>
   </div>
 
   <!-- the stage sticks are the record of the throw; here only the fact remains -->
-  <div class="result" aria-live="polite">
-    {#if shownValue !== null}
-      <span class="numeral">{shownValue}</span>
-      {#if throwAgain}
-        <span class="again">throw again</span>
+  <div class="reading" aria-hidden="true">
+    <div class="result">
+      {#if shownValue !== null}
+        <span class="numeral">{shownValue}</span>
+        {#if throwAgain}
+          <span class="again">throw again</span>
+        {/if}
       {/if}
-    {/if}
+    </div>
+    <p class="msg">{message}</p>
   </div>
 
-  <p class="msg" aria-live="polite">{message}</p>
-
-  {#if showThrow}
-    <button class="throw" onclick={() => game.throwSticks()} disabled={!canThrow}>
-      Throw sticks
-    </button>
-  {/if}
+  <div class="action">
+    {#if showThrow}
+      <button class="throw" onclick={() => game.throwSticks()} disabled={!canThrow}>
+        Throw sticks
+      </button>
+    {/if}
+  </div>
 </div>
 
 <style>
   .hud {
-    display: flex;
+    /* Narrower than the board on purpose. Spanning the full box scattered the
+       three slots to opposite corners on a phone, where the rail runs the long
+       axis; this keeps them one readable cluster at every size. */
+    width: min(100%, 34rem);
+    margin-inline: auto;
+    display: grid;
+    grid-template-columns: 1fr minmax(0, auto) 1fr;
     align-items: center;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 8px 18px;
-    padding: 6px 12px;
-    min-height: 64px;
+    gap: 12px;
+    padding: 6px 18px;
+    /* Reserves the tallest reading (numeral over a two-line notice) so the
+       board above never has to move to make room. */
+    min-height: 76px;
   }
 
   .turn {
     display: flex;
     align-items: center;
     gap: 8px;
-    min-width: 74px;
-  }
-
-  .glyph {
-    width: 18px;
-    height: 20px;
+    justify-self: start;
   }
 
   .who {
@@ -124,6 +144,21 @@
     font-size: var(--text-sm);
     letter-spacing: 0.12em;
     text-transform: uppercase;
+  }
+
+  .reading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .action {
+    justify-self: end;
+  }
+
+  .glyph {
+    display: flex;
   }
 
   .turn:global(.nudged) .glyph {
@@ -144,7 +179,7 @@
 
   @keyframes flare {
     30% {
-      color: var(--faience);
+      color: var(--faience-deep);
     }
   }
 
@@ -152,7 +187,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    min-height: 44px;
+    min-height: 34px;
   }
 
   .numeral {
@@ -164,39 +199,62 @@
     text-align: center;
   }
 
+  /* The one place the accent carries text, and it sits on the pale table:
+     the deep step reads at 4.7:1 where the base faience managed 2.0:1. */
   .again {
     font-size: var(--text-sm);
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--faience);
+    color: var(--faience-deep);
   }
 
+  /* No reserved height here: the rail's min-height already holds the room, and
+     reserving it twice pushed the numeral off the turn indicator's centre line. */
   .msg {
     margin: 0;
-    max-width: 34ch;
+    max-width: 46ch;
     font-size: var(--text-sm);
     text-wrap: balance;
     text-align: center;
-    min-height: 1.2em;
   }
 
   .throw {
     min-height: 44px;
     padding: 10px 26px;
     font-weight: 700;
+    white-space: nowrap;
     background: transparent;
     border: 1.5px solid var(--ebony);
     border-radius: 999px;
     cursor: pointer;
-    transition: background-color var(--duration-ui), opacity var(--duration-ui);
+    transition:
+      background-color var(--duration-ui) var(--ease-out-expo),
+      opacity var(--duration-ui) var(--ease-out-expo);
   }
   .throw:hover:enabled {
     background: var(--ivory);
   }
+  .throw:active:enabled {
+    background: var(--faience);
+    border-color: var(--faience-deep);
+  }
   .throw:disabled {
     opacity: 0.45;
     cursor: default;
+  }
+
+  /* Short axis: the rail is competing with the board for the scarce dimension,
+     so it gives some back. */
+  @media (orientation: portrait) and (max-width: 430px), (max-height: 430px) {
+    .hud {
+      min-height: 62px;
+      gap: 8px;
+    }
+
+    .numeral {
+      font-size: var(--text-lg);
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {

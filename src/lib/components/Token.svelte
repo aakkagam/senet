@@ -4,6 +4,7 @@
   import { inCaptureZone, squarePos, targetPos, trayPos, type Pos } from '../geometry';
   import { prefersReducedMotion, SPRING_FOLLOW, SPRING_SETTLE, SPRING_SHAKE } from '../motion';
   import type { Token } from '../tokens';
+  import TokenGlyph from './TokenGlyph.svelte';
 
   let { token }: { token: Token } = $props();
 
@@ -155,19 +156,7 @@
     <ellipse class="shadow" cx="0.7" cy="1.8" rx="5.4" ry="4.2" />
   {/if}
   <g class="body" bind:this={bodyEl}>
-    {#if token.player === 'light'}
-      <!-- spool: waisted silhouette -->
-      <path
-        class="fill"
-        d="M -3.6 -4.8 L 3.6 -4.8 C 3.6 -1.6 1.1 -1 1.1 0 C 1.1 1 3.6 1.6 3.6 4.8 L -3.6 4.8 C -3.6 1.6 -1.1 1 -1.1 0 C -1.1 -1 -3.6 -1.6 -3.6 -4.8 Z"
-      />
-      <line class="rim" x1="-3.6" y1="-3.4" x2="3.6" y2="-3.4" />
-      <line class="rim" x1="-3.6" y1="3.4" x2="3.6" y2="3.4" />
-    {:else}
-      <!-- cone: tapered silhouette -->
-      <path class="fill" d="M 0 -5.2 L 3.9 3.4 Q 3.9 5 0 5 Q -3.9 5 -3.9 3.4 Z" />
-      <path class="rim" d="M -2.9 1.2 Q 0 2.4 2.9 1.2" />
-    {/if}
+    <TokenGlyph player={token.player} rim />
   </g>
   <!-- generous invisible touch target (≥44px even at 360px-wide viewports) -->
   <circle r="10" fill="transparent" />
@@ -185,32 +174,35 @@
     cursor: grabbing;
   }
 
-  .light .fill {
+  .light :global(.fill) {
     fill: var(--ivory);
     stroke: var(--ebony);
     stroke-width: 0.4;
     stroke-opacity: 0.55;
   }
-  .light .rim {
+  .light :global(.rim) {
     stroke: var(--ebony);
     stroke-width: 0.35;
     opacity: 0.4;
   }
-  .dark .fill {
+  .dark :global(.fill) {
     fill: var(--ebony);
   }
-  .dark .rim {
+  .dark :global(.rim) {
     stroke: var(--ivory);
     stroke-width: 0.35;
     fill: none;
     opacity: 0.45;
   }
 
+  /* Glaze, not base faience: the halo is the "you can lift this" affordance and
+     has to survive greyscale, so it needs a luminance step off the wood
+     (3.2:1), not just a hue shift (1.25:1). The breathing is a bonus, not the
+     signal — under reduced motion the ring alone still reads. */
   .halo {
     fill: none;
-    stroke: var(--faience);
-    stroke-width: 0.5;
-    opacity: 0.85;
+    stroke: var(--faience-glaze);
+    stroke-width: 0.6;
     animation: breathe 1.3s ease-in-out infinite;
   }
 
@@ -218,11 +210,11 @@
     0%,
     100% {
       transform: scale(1);
-      opacity: 0.85;
+      opacity: 1;
     }
     50% {
       transform: scale(1.18);
-      opacity: 0.45;
+      opacity: 0.6;
     }
   }
 

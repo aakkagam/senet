@@ -3,9 +3,12 @@ import {
   BOARD,
   SNAP,
   SQUARE,
+  STICK,
+  TRAY_SLOT_R,
   VIEW,
   inCaptureZone,
   squarePos,
+  stickPos,
   targetPos,
   trayPos,
 } from './geometry';
@@ -91,6 +94,26 @@ describe('trayPos', () => {
     expect(trayPos('light', 1).x).toBeGreaterThan(trayPos('light', 0).x);
     expect(trayPos('dark', 1).x).toBeLessThan(trayPos('dark', 0).x);
     expect(trayPos('light', 0).x).toBeLessThan(trayPos('dark', 0).x);
+  });
+
+  it('the two trays are mirror images about the box centre', () => {
+    const centre = BOARD.x + (BOARD.cols * SQUARE) / 2;
+    for (let slot = 0; slot < 5; slot++) {
+      const light = trayPos('light', slot).x;
+      const dark = trayPos('dark', slot).x;
+      expect(centre - light).toBeCloseTo(dark - centre);
+    }
+  });
+
+  it('a full tray never collides with the sticks resting in the centre strip', () => {
+    // The last slot to fill is the innermost one, so slot 4 is the worst case.
+    const lightEdge = trayPos('light', 4).x + TRAY_SLOT_R;
+    const darkEdge = trayPos('dark', 4).x - TRAY_SLOT_R;
+    for (let i = 0; i < 4; i++) {
+      const stick = stickPos(i);
+      expect(stick.x - STICK.w / 2).toBeGreaterThan(lightEdge);
+      expect(stick.x + STICK.w / 2).toBeLessThan(darkEdge);
+    }
   });
 });
 

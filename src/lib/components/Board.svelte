@@ -128,13 +128,15 @@
     opacity: 0.55;
   }
 
+  /* Full ivory, not a faded 0.8: these glyphs are the only thing naming the
+     special houses, so they are information, not texture, and owe the 3:1
+     non-text floor against the timber (0.8 opacity landed at 2.55:1). */
   .marks {
     stroke: var(--ivory);
     stroke-width: 0.65;
     stroke-linecap: round;
     stroke-linejoin: round;
     fill: none;
-    opacity: 0.8;
   }
 
   .marks .dot {
@@ -146,12 +148,14 @@
     fill: transparent;
     stroke: none;
     cursor: help;
-    outline: none;
   }
 
+  /* The wood needs the glaze step — the base accent scores 1.35:1 here, so the
+     old ring was a keyboard user staring at an unmarked square. */
   .hotspot:focus-visible {
-    stroke: var(--faience);
-    stroke-width: 0.7;
+    outline: none;
+    stroke: var(--faience-glaze);
+    stroke-width: 0.9;
   }
 
   .chevrons path {

@@ -46,14 +46,14 @@ export interface HouseNote {
 
 /** Teach-through-the-board copy: short, names the house, states the rule. */
 const LANDING_NOTES: Record<number, string> = {
-  15: 'House of Second Life — the token is reborn at the start.',
-  27: 'House of Waters — stuck until a throw of 4, or a return to Second Life.',
-  28: 'House of Three Judges — leaves only on an exact 3.',
-  29: 'House of Two Judges — leaves only on an exact 2.',
-  30: 'House of Horus — any throw bears it off.',
+  15: 'House of Second Life: the token is reborn at the start.',
+  27: 'House of Waters: stuck until a throw of 4, or a return to Second Life.',
+  28: 'House of Three Judges: leaves only on an exact 3.',
+  29: 'House of Two Judges: leaves only on an exact 2.',
+  30: 'House of Horus: any throw bears it off.',
 };
 
-const GATE_NOTE = 'House of Beauty — a token must land here exactly before passing.';
+const GATE_NOTE = 'House of Beauty: a token must land here exactly before passing.';
 
 class Game {
   /** Resumes a saved game when a valid one exists, else starts fresh. */
@@ -266,7 +266,7 @@ class Game {
       this.lastFaces = faces;
       this.lastThrow = result;
       if (next!.turn !== thrower) {
-        this.queueNotice(`No move possible with a ${result.value} — the turn passes.`, thrower);
+        this.queueNotice(`No move possible with a ${result.value}. The turn passes.`, thrower);
       }
       this.beginReveal();
     }
@@ -303,7 +303,10 @@ class Game {
       this.lastFaces = faces;
       this.lastThrow = result;
       if (result.value !== 4) {
-        this.queueNotice(`Threw a ${result.value} — only a 4 frees the Waters. The turn passes.`, thrower);
+        this.queueNotice(
+          `Threw a ${result.value}: only a 4 frees the Waters. The turn passes.`,
+          thrower,
+        );
       }
       this.beginReveal();
     }
