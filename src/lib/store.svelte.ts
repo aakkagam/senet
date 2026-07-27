@@ -46,18 +46,22 @@ export interface HouseNote {
 
 /** Teach-through-the-board copy: short, names the house, states the rule. */
 const LANDING_NOTES: Record<number, string> = {
-  15: 'House of Second Life: the token is reborn at the start.',
-  27: 'House of Waters: stuck until a throw of 4, or a return to Second Life.',
-  28: 'House of Three Judges: leaves only on an exact 3.',
-  29: 'House of Two Judges: leaves only on an exact 2.',
-  30: 'House of Horus: any throw bears it off.',
+  15: 'House of Second Life: this token is reborn and starts again from square 1.',
+  27: 'House of Waters: stuck here until you throw a 4, or return it to Second Life.',
+  28: 'House of Three Judges: this token leaves only on an exact 3.',
+  29: 'House of Two Judges: this token leaves only on an exact 2.',
+  30: 'House of Horus: any throw takes this token off the board.',
 };
 
-const GATE_NOTE = 'House of Beauty: a token must land here exactly before passing.';
+/** Shown when the gate refuses a grab, so it reads as the reason for the refusal. */
+const GATE_NOTE = 'House of Beauty: no token may pass until it lands here on an exact throw.';
+
+/** Read once: a resumed game skips the opening hint, a fresh one earns it. */
+const restored = load(localStorage);
 
 class Game {
   /** Resumes a saved game when a valid one exists, else starts fresh. */
-  state = $state<GameState>(load(localStorage) ?? newGame());
+  state = $state<GameState>(restored ?? newGame());
   /** Identity-stable sprites the springs animate; mirrors state.squares. */
   tokens = $state<Token[]>(initialTokens(this.state));
   /** Faces of the most recent throw, for the stick sprites on the stage. */
@@ -78,6 +82,9 @@ class Game {
   houseNote = $state<HouseNote | null>(null);
   /** House whose lore tooltip is open (pointer or focus on its carved mark). */
   infoHouse = $state<number | null>(null);
+  /** First-run hint: the board teaches the rules, but nothing on it states the
+   *  goal, so the HUD says it once and retires at the first throw. */
+  showOpening = $state(restored === null);
 
   /** Notice earned by a throw, held back until its reveal completes. */
   private pendingNotice = $state<Notice | null>(null);
@@ -263,10 +270,13 @@ class Game {
     const next = applyThrow(this.state, result);
     const ok = this.commit(next);
     if (ok) {
+      this.showOpening = false;
       this.lastFaces = faces;
       this.lastThrow = result;
       if (next!.turn !== thrower) {
-        this.queueNotice(`No move possible with a ${result.value}. The turn passes.`, thrower);
+        // The numeral above says which throw it was; repeating it here said the
+        // same number twice, and read it out twice to a screen reader.
+        this.queueNotice('No token can move. The turn passes.', thrower);
       }
       this.beginReveal();
     }
@@ -303,10 +313,7 @@ class Game {
       this.lastFaces = faces;
       this.lastThrow = result;
       if (result.value !== 4) {
-        this.queueNotice(
-          `Threw a ${result.value}: only a 4 frees the Waters. The turn passes.`,
-          thrower,
-        );
+        this.queueNotice('Only a 4 frees the token. The turn passes.', thrower);
       }
       this.beginReveal();
     }
@@ -328,6 +335,7 @@ class Game {
     this.revealing = false;
     this.houseNote = null;
     this.infoHouse = null;
+    this.showOpening = true;
     this.seenHouses.clear();
     save(localStorage, this.state);
   }

@@ -9,8 +9,10 @@
 </script>
 
 <div class="anchor" style="left: {left}%; top: {top}%">
-  <div class="panel" role="group" aria-label="House of Waters choice">
-    <p class="title">The Waters hold this token</p>
+  <div class="panel" role="group" aria-label="Stuck in the House of Waters">
+    <!-- Kept shorter than the buttons: the title is nowrap, and the panel is
+         anchored over square 27 with little room to its right. -->
+    <p class="title">Stuck in the Waters</p>
     <button onclick={() => game.waterReturn()} disabled={game.revealing}>
       Return to Second Life
     </button>

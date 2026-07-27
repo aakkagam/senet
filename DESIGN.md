@@ -36,7 +36,7 @@ Four named roles, each used deliberately; warmth throughout, no pure black or wh
 - **Faience** (Egyptian blue-green accent) `oklch(0.68 0.11 195)`: the single accent. Legal-move highlights, the active special house, the throw-result moment. Rare enough to feel like glaze. Ships as three steps, chosen by the ground it sits on (see The Two Grounds Rule):
   - `--faience` `oklch(0.68 0.11 195)` — fills that carry ebony text (6.0:1); never a text or line color itself.
   - `--faience-glaze` `oklch(0.94 0.085 195)` — anything drawn **on the wood**: destination cells, move ghosts, grabbable halos, board focus rings. 3.2:1 on timber; it is the lightest teal the sRGB gamut holds before the chroma clips, so treat 3.2 as the ceiling and never darken the wood past L 0.62 without re-checking.
-  - `--faience-deep` `oklch(0.48 0.08 195)` — anything drawn **on the table or ivory**: the "throw again" label, focus rings, bear-off destinations. 4.7:1 on table, 5.3:1 on ivory.
+  - `--faience-deep` `oklch(0.48 0.08 195)` — anything drawn **on the table or ivory**: the "extra throw" label, focus rings, bear-off destinations. 4.7:1 on table, 5.3:1 on ivory.
 
 ### Tertiary
 - **Ivory** (warm bone-white, never #fff) `oklch(0.94 0.02 90)`: light player tokens, inlaid grid lines, light text on wood.

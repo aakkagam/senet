@@ -31,7 +31,9 @@
   const playing = $derived(game.state.phase.kind !== 'game-over');
 
   const label = $derived(
-    `${token.player} token ${token.square === 'off' ? 'borne off' : `on square ${token.square}`}`,
+    `${token.player === 'light' ? 'Light' : 'Dark'} token ${
+      token.square === 'off' ? 'off the board' : `on square ${token.square}`
+    }`,
   );
 
   let moved = false;

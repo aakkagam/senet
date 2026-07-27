@@ -7,6 +7,7 @@
   const winner = $derived(
     game.state.phase.kind === 'game-over' ? game.state.phase.winner : null,
   );
+  const who = $derived(winner === 'light' ? 'Light' : 'Dark');
   const delay = prefersReducedMotion() ? 0 : 450;
   const dur = prefersReducedMotion() ? 0 : 220;
 
@@ -22,11 +23,17 @@
 </script>
 
 <div class="veil" in:fade={{ duration: dur, delay }} out:fade={{ duration: dur }}>
-  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="win-title">
-    <p class="win-title" id="win-title">{winner === 'light' ? 'Light' : 'Dark'} passes beyond</p>
-    <p class="detail">
+  <div
+    class="panel"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="win-title"
+    aria-describedby="win-detail"
+  >
+    <p class="win-title" id="win-title">{who} passes beyond</p>
+    <p class="detail" id="win-detail">
       {#if winner}<TokenMarker player={winner} />{/if}
-      All five tokens borne off the board
+      All five tokens off the board. {who} wins.
     </p>
     <button class="again" bind:this={playAgain} onclick={() => game.newGame()}>Play again</button>
   </div>

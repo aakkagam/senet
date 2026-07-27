@@ -7,7 +7,7 @@
     game.revealing ? null : (game.pendingValue ?? game.lastThrow?.value ?? null),
   );
 
-  /** "Throw again" marker: pending on the current move, or granted and waiting.
+  /** "Extra throw" marker: pending on the current move, or granted and waiting.
    *  Never during a turn-passing notice — that throw earned nothing. */
   const throwAgain = $derived(
     !game.notice &&
@@ -25,8 +25,8 @@
     if (st.phase.kind === 'house-27-choice') return '';
     if (game.backwardTurn) {
       return game.lastThrow?.throwAgain
-        ? 'No forward moves. Move a token backward; the extra throw is forfeited.'
-        : 'No forward moves. Move a token backward.';
+        ? 'No token can move forward. Move one backward; you lose the extra throw.'
+        : 'No token can move forward. Move one backward instead.';
     }
     if (
       st.phase.kind === 'awaiting-move' &&
@@ -34,7 +34,12 @@
       !st.lightFirstMoveDone &&
       st.squares[9] === 'light'
     ) {
-      return 'Light begins with the token on square 9.';
+      return "Light's first move must be the token on square 9.";
+    }
+    // Last, so any live instruction outranks it: the board never states the
+    // goal, so the first screen of a new game does.
+    if (game.showOpening) {
+      return 'Throw the sticks, then move a token. First side to get all five off the board wins.';
     }
     return '';
   });
@@ -46,14 +51,15 @@
    *  reads it out three times, so they stay silent and this speaks instead. */
   const spoken = $derived.by(() => {
     const parts = [`${who} to play`];
-    if (shownValue !== null) parts.push(`threw a ${shownValue}`);
-    if (throwAgain) parts.push('throw again');
+    if (shownValue !== null) parts.push(`Threw a ${shownValue}`);
+    if (throwAgain) parts.push('Extra throw earned');
     if (message) parts.push(message);
     // Only the sighted player gets this from the panel pointing at square 27.
     if (game.state.phase.kind === 'house-27-choice') {
-      parts.push('A token is caught in the House of Waters');
+      parts.push('A token is stuck in the House of Waters');
     }
-    return parts.join('. ') + '.';
+    // Notices arrive already punctuated; joining them raw doubled the stop.
+    return parts.map((part) => part.replace(/\.$/, '')).join('. ') + '.';
   });
 
   const canThrow = $derived(
@@ -99,7 +105,10 @@
       {#if shownValue !== null}
         <span class="numeral">{shownValue}</span>
         {#if throwAgain}
-          <span class="again">throw again</span>
+          <!-- A fact about the throw, not an instruction: the extra throw is
+               owed but the move comes first, so an imperative sent players
+               hunting for a throw button that was not there yet. -->
+          <span class="again">extra throw</span>
         {/if}
       {/if}
     </div>
