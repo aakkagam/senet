@@ -1,6 +1,5 @@
 /* Design tokens — source of truth: DESIGN.md ("The Four Voices Rule" + Table).
-   All color values are PLACEHOLDERS to be resolved during UI work.
-   Constraint held even here: no pure #000 or #fff anywhere. */
+   No pure #000 or #fff anywhere; every neutral is tinted toward the timber. */
 
 :root {
   /* Palette (four voices + table neutral) */
@@ -8,11 +7,22 @@
   --faience: oklch(0.68 0.11 195); /* the single Egyptian blue-green accent */
   --ivory: oklch(0.94 0.02 90); /* light tokens, inlay lines, light text */
   --ebony: oklch(0.24 0.02 55); /* dark tokens, text, carved shadows */
+  --ebony-dim: oklch(0.4 0.025 55); /* colophon and prose, 5.0:1 on the table */
   --table: oklch(0.9 0.02 80); /* quiet surface the box sits on */
 
-  /* Typography — families to be chosen during UI work (rare serif + humanist sans) */
-  --font-display: 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
-  --font-body: 'Gill Sans', 'Segoe UI', system-ui, sans-serif;
+  /* One glaze, two grounds. The board is a mid-tone (L 0.62) and the table is
+     pale (L 0.90), so a single accent value cannot clear 3:1 on both — the base
+     faience scores 1.35:1 on wood and 2.03:1 on the table, i.e. hue with no
+     luminance. These two steps carry the accent's *contrast* on each ground;
+     --faience itself stays a fill under ebony text (6.02:1). */
+  --faience-glaze: oklch(0.94 0.085 195); /* on wood 3.2:1 — live squares, halos */
+  --faience-deep: oklch(0.48 0.08 195); /* on table 4.7:1, on ivory 5.3:1 — text, focus */
+
+  /* A ceremonial inscriptional serif over a humanist sans. Shared verbatim
+     across the three Aakkagam games and loaded in main.ts, so the wordmark and
+     prose read as one family; the system faces behind them carry first paint. */
+  --font-display: 'Marcellus', 'Iowan Old Style', 'Palatino Linotype', serif;
+  --font-body: 'Alegreya Sans', 'Gill Sans', 'Segoe UI', sans-serif;
 
   /* Type scale, ratio 1.25 */
   --text-sm: 0.8rem;

@@ -1,4 +1,6 @@
-<!-- SEED: re-run /impeccable document once there's code to capture the actual tokens and components. -->
+<!-- Colors and their contrast rules are resolved against the shipped code
+     (src/styles/tokens.css). Typography and components are still seed text:
+     re-run /impeccable document to capture those from the source. -->
 ---
 name: senet
 description: Ancient Egyptian race game as a warm wood-and-ivory game box, spring-driven and playful
@@ -28,27 +30,34 @@ Motion energy is **responsive**: every interaction gives spring-weighted feedbac
 Four named roles, each used deliberately; warmth throughout, no pure black or white anywhere.
 
 ### Primary
-- **Carved Wood** (warm timber family, mid-tone) `[to be resolved during implementation]`: the board box surface; the grid reads as inlaid or carved into it.
+- **Carved Wood** `oklch(0.62 0.07 65)`: the board box surface; the grid reads as inlaid or carved into it.
 
 ### Secondary
-- **Faience** (Egyptian blue-green accent) `[to be resolved during implementation]`: the single accent. Legal-move highlights, the active special house, the throw-result moment. Rare enough to feel like glaze.
+- **Faience** (Egyptian blue-green accent) `oklch(0.68 0.11 195)`: the single accent. Legal-move highlights, the active special house, the throw-result moment. Rare enough to feel like glaze. Ships as three steps, chosen by the ground it sits on (see The Two Grounds Rule):
+  - `--faience` `oklch(0.68 0.11 195)` — fills that carry ebony text (6.0:1); never a text or line color itself.
+  - `--faience-glaze` `oklch(0.94 0.085 195)` — anything drawn **on the wood**: destination cells, move ghosts, grabbable halos, board focus rings. 3.2:1 on timber; it is the lightest teal the sRGB gamut holds before the chroma clips, so treat 3.2 as the ceiling and never darken the wood past L 0.62 without re-checking.
+  - `--faience-deep` `oklch(0.48 0.08 195)` — anything drawn **on the table or ivory**: the "throw again" label, focus rings, bear-off destinations. 4.7:1 on table, 5.3:1 on ivory.
 
 ### Tertiary
-- **Ivory** (warm bone-white, never #fff) `[to be resolved]`: light player tokens, inlaid grid lines, light text on wood.
-- **Ebony** (warm near-black, never #000) `[to be resolved]`: dark player tokens, text, carved-line shadows.
+- **Ivory** (warm bone-white, never #fff) `oklch(0.94 0.02 90)`: light player tokens, inlaid grid lines, light text on wood.
+- **Ebony** (warm near-black, never #000) `oklch(0.24 0.02 55)`: dark player tokens, text, carved-line shadows.
 
 ### Neutral
-- **Table** (quiet warm neutral around the box) `[to be resolved]`: whatever surface the box sits on; must recede completely.
+- **Table** (quiet warm neutral around the box) `oklch(0.9 0.02 80)`: whatever surface the box sits on; must recede completely.
 
 ### Named Rules
 **The Four Voices Rule.** Wood, Faience, Ivory, Ebony: every element on screen maps to one of the four roles. A fifth color needs a reason strong enough to write down here.
 **The Glaze Rule.** Faience is the only saturated voice and it only speaks when the game does: legal moves, live special houses, the throw. Decoration never gets it.
 **The Both-Floors Contrast Rule.** Both token colors must hold WCAG AA contrast against Carved Wood, and against each other where they meet in a swap.
+**The Two Grounds Rule.** This screen has two backgrounds a long way apart in lightness — the timber at L 0.62 and the table at L 0.90 — and one accent value cannot clear its contrast floor on both. Mid faience scores 1.35:1 on wood and 2.03:1 on the table: hue with nothing behind it. So the accent picks its step from what it is drawn *on*, not from what it means. Anything on wood takes the glaze step; anything on table or ivory takes the deep step. A live state is never the base faience.
+**The Greyscale Rule.** Every state the player has to read — which pieces can move, where the throw sends them — must survive `grayscale(1)`. Color may reinforce it; color may not be the only thing carrying it. The move destination says it twice: a glazed cell and a ghost of the mover's own silhouette.
 
 ## 3. Typography
 
-**Display Font:** warm, slightly carved serif `[font pairing to be chosen at implementation]`
-**Body Font:** clean humanist sans `[to be chosen at implementation]`
+**Display Font:** `'Marcellus', 'Iowan Old Style', 'Palatino Linotype', serif` — an inscriptional serif, ancient without costume. Shared verbatim with align3 and Ostomachion: one display face across Aakkagam Games, so the three wordmarks read as one family.
+**Body Font:** `'Alegreya Sans', 'Gill Sans', 'Segoe UI', sans-serif` — humanist, quiet, warm. Also shared across all three games.
+
+Both load via `@fontsource` in `main.ts` (Marcellus 400; Alegreya Sans 400/700). The system faces behind them carry first paint.
 
 **Character:** Ancient without costume. The serif appears rarely (title, win moment) so it lands with ceremony; the sans does the quiet everyday work of the HUD and throw results. No hieroglyph or papyrus-style novelty faces, ever.
 

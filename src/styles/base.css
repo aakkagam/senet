@@ -6,17 +6,31 @@
 
 html {
   height: 100%;
+  /* The rotated portrait layout is sized in dvw, which counts a classic
+     scrollbar the content box doesn't have — 15px of sideways scroll on a
+     narrow desktop window. Phones use overlay scrollbars and never see it. */
+  overflow-x: clip;
 }
 
 body {
   margin: 0;
   min-height: 100%;
+  /* First row is one full viewport: the game fills it and the about
+     section starts below the fold (crawlable, but never above the game). */
+  display: grid;
+  grid-template-rows: 100dvh auto;
+  grid-template-columns: 100%;
+  overflow-x: clip;
   background: var(--table);
   color: var(--ebony);
   font-family: var(--font-body);
   font-size: var(--text-base);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  height: 100%;
 }
 
 ::selection {
@@ -29,9 +43,26 @@ button {
   color: inherit;
 }
 
+/* Chrome sits on the pale table, so the focus ring takes the deep step of the
+   accent (4.7:1). Board-surface focus is handled on the wood in Board.svelte,
+   where the glaze step is the one that carries. */
 :focus-visible {
-  outline: 2px solid var(--faience);
+  outline: 2px solid var(--faience-deep);
   outline-offset: 2px;
+}
+
+/* Announced, never drawn: one live region speaks the turn, the throw and any
+   notice as a single sentence, so the HUD's three visual pieces stay silent. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -48,6 +79,7 @@ button {
   max-width: 38rem;
   margin: 0 auto;
   padding: 2rem 1.25rem 3rem;
+  color: var(--ebony-dim);
 }
 
 .about h1,
@@ -55,8 +87,10 @@ button {
   margin: 2rem 0 0.5rem;
   font-family: var(--font-display);
   font-weight: 400;
+  line-height: 1.25;
   letter-spacing: var(--tracking-display);
   color: var(--ebony);
+  text-wrap: balance;
 }
 
 .about h1 {
@@ -74,6 +108,12 @@ button {
 .about p {
   margin: 0 0 1rem;
   font-size: var(--text-base);
+  text-wrap: pretty;
+}
+
+.about .more {
+  margin: 1.5rem 0 0;
+  font-size: var(--text-sm);
 }
 
 .about a {
